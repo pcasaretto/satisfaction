@@ -21,30 +21,30 @@ func NewCell() *Cell {
 	return cell
 }
 
-
 type direction int
+
 const (
-        up direction = iota
-        down
-        left
-        right
+	up direction = iota
+	down
+	left
+	right
 )
 
 func (cell *Cell) cellsGivenDirection(dir direction) []*Cell {
-  var cells []*Cell
+	var cells []*Cell
 
-  var next func(c *Cell) *Cell
+	var next func(c *Cell) *Cell
 
-  switch dir {
-  case up:
-    next = func(c *Cell) *Cell { return c.up }
-  case down:
-    next = func(c *Cell) *Cell { return c.down }
-  case left:
-    next = func(c *Cell) *Cell { return c.left }
-  case right:
-    next = func(c *Cell) *Cell { return c.right }
-  }
+	switch dir {
+	case up:
+		next = func(c *Cell) *Cell { return c.up }
+	case down:
+		next = func(c *Cell) *Cell { return c.down }
+	case left:
+		next = func(c *Cell) *Cell { return c.left }
+	case right:
+		next = func(c *Cell) *Cell { return c.right }
+	}
 
 	for c := next(cell); c != cell; c = next(c) {
 		cells = append(cells, c)
@@ -53,19 +53,19 @@ func (cell *Cell) cellsGivenDirection(dir direction) []*Cell {
 }
 
 func (cell *Cell) cellsDown() []*Cell {
-  return cell.cellsGivenDirection(down)
+	return cell.cellsGivenDirection(down)
 }
 
 func (cell *Cell) cellsUp() []*Cell {
-  return cell.cellsGivenDirection(up)
+	return cell.cellsGivenDirection(up)
 }
 
 func (cell *Cell) cellsLeft() []*Cell {
-  return cell.cellsGivenDirection(left)
+	return cell.cellsGivenDirection(left)
 }
 
 func (cell *Cell) cellsRight() []*Cell {
-  return cell.cellsGivenDirection(right)
+	return cell.cellsGivenDirection(right)
 }
 
 func (cell *Cell) addCellDown(toAdd *Cell) {
@@ -96,22 +96,22 @@ func (cell *Cell) addCellRight(toAdd *Cell) {
 	toAdd.left = cell
 }
 
-func (cell *Cell) implodeVertically() {
-  cell.up.down = cell.down
-  cell.down.up = cell.up
+func (cell *Cell) removeVertically() {
+	cell.up.down = cell.down
+	cell.down.up = cell.up
 }
 
 func (cell *Cell) restoreVertically() {
-  cell.up.down = cell
-  cell.down.up = cell
+	cell.up.down = cell
+	cell.down.up = cell
 }
 
-func (cell *Cell) implodeHorizontally() {
-  cell.right.left = cell.left
-  cell.left.right = cell.right
+func (cell *Cell) removeHorizontally() {
+	cell.right.left = cell.left
+	cell.left.right = cell.right
 }
 
 func (cell *Cell) restoreHorizontally() {
-  cell.right.left = cell
-  cell.left.right = cell
+	cell.right.left = cell
+	cell.left.right = cell
 }
