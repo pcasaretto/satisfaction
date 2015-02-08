@@ -16,11 +16,11 @@ func TestNewCell(t *testing.T) {
 }
 
 func TestAddCellDown(t *testing.T) {
-	Convey("Cell#addCellDown", t, func() {
+	Convey("Cell#AddCellDown", t, func() {
 		cell := NewCell()
 		cell2 := NewCell()
 		Convey("should set up the connections properly", func() {
-			cell.addCellDown(cell2)
+			cell.AddCellDown(cell2)
 			So(cell.down, ShouldEqual, cell2)
 			So(cell.up, ShouldEqual, cell2)
 			So(cell2.down, ShouldEqual, cell)
@@ -30,11 +30,11 @@ func TestAddCellDown(t *testing.T) {
 }
 
 func TestAddCellUp(t *testing.T) {
-	Convey("Cell#addCellUp", t, func() {
+	Convey("Cell#AddCellUp", t, func() {
 		cell := NewCell()
 		cell2 := NewCell()
 		Convey("should set up the connections properly", func() {
-			cell.addCellUp(cell2)
+			cell.AddCellUp(cell2)
 			So(cell.down, ShouldEqual, cell2)
 			So(cell.up, ShouldEqual, cell2)
 			So(cell2.down, ShouldEqual, cell)
@@ -44,25 +44,30 @@ func TestAddCellUp(t *testing.T) {
 }
 
 func TestAddCellLeft(t *testing.T) {
-	Convey("Cell#addCellLeft", t, func() {
+
+	Convey("Cell#AddCellLeft", t, func() {
+
 		cell := NewCell()
 		cell2 := NewCell()
+
 		Convey("should set up the connections properly", func() {
-			cell.addCellLeft(cell2)
+			cell.AddCellLeft(cell2)
 			So(cell.left, ShouldEqual, cell2)
 			So(cell.right, ShouldEqual, cell2)
 			So(cell2.left, ShouldEqual, cell)
 			So(cell2.right, ShouldEqual, cell)
 		})
+
 	})
+
 }
 
 func TestAddCellRight(t *testing.T) {
-	Convey("Cell#addCellRight", t, func() {
+	Convey("Cell#AddCellRight", t, func() {
 		cell := NewCell()
 		cell2 := NewCell()
 		Convey("should set up the connections properly", func() {
-			cell.addCellRight(cell2)
+			cell.AddCellRight(cell2)
 			So(cell.left, ShouldEqual, cell2)
 			So(cell.right, ShouldEqual, cell2)
 			So(cell2.left, ShouldEqual, cell)
@@ -72,12 +77,12 @@ func TestAddCellRight(t *testing.T) {
 }
 
 func TestCellsDown(t *testing.T) {
-	Convey("Cell#cellsDown", t, func() {
+	Convey("Cell#CellsDown", t, func() {
 		cell := NewCell()
 
 		Convey("When there are no cells down", func() {
 			Convey("Returns an empty slice", func() {
-				So(cell.cellsDown(), ShouldBeEmpty)
+				So(cell.CellsDown(), ShouldBeEmpty)
 			})
 		})
 
@@ -85,13 +90,57 @@ func TestCellsDown(t *testing.T) {
 			Convey("Returns the cells ordered", func() {
 				cell2 := NewCell()
 				cell3 := NewCell()
-				cell.addCellDown(cell3)
-				cell.addCellDown(cell2)
-				cells := cell.cellsDown()
+				cell.AddCellDown(cell3)
+				cell.AddCellDown(cell2)
+				cells := cell.CellsDown()
 				So(len(cells), ShouldEqual, 2)
 				So(cells[0], ShouldEqual, cell2)
 				So(cells[1], ShouldEqual, cell3)
 			})
+		})
+	})
+}
+
+func TestRemoveAndRestoreVertically(t *testing.T) {
+	Convey("", t, func() {
+		cell := NewCell()
+		cellUp := NewCell()
+		cellDown := NewCell()
+		cell.AddCellDown(cellDown)
+		cell.AddCellUp(cellUp)
+		cell.RemoveVertically()
+		Convey("Cell#RemoveVertically removes the cell from the horizontal line", func() {
+			So(cellUp.down, ShouldEqual, cellDown)
+			So(cellDown.up, ShouldEqual, cellUp)
+		})
+		cell.RestoreVertically()
+		Convey("Cell#RestoreVertically restores the cell to the horizontal line", func() {
+			So(cellUp.down, ShouldEqual, cell)
+			So(cell.up, ShouldEqual, cellUp)
+			So(cellDown.up, ShouldEqual, cell)
+			So(cell.down, ShouldEqual, cellDown)
+		})
+	})
+}
+
+func TestRemoveAndRestoreHorizontally(t *testing.T) {
+	Convey("", t, func() {
+		cell := NewCell()
+		cellLeft := NewCell()
+		cellRight := NewCell()
+		cell.AddCellRight(cellRight)
+		cell.AddCellLeft(cellLeft)
+		cell.RemoveHorizontally()
+		Convey("Cell#RemoveHorizontally removes the cell from the horizontal line", func() {
+			So(cellLeft.right, ShouldEqual, cellRight)
+			So(cellRight.left, ShouldEqual, cellLeft)
+		})
+		cell.RestoreHorizontally()
+		Convey("Cell#RestoreHorizontally restores the cell to the horizontal line", func() {
+			So(cellLeft.right, ShouldEqual, cell)
+			So(cell.left, ShouldEqual, cellLeft)
+			So(cellRight.left, ShouldEqual, cell)
+			So(cell.right, ShouldEqual, cellRight)
 		})
 	})
 }

@@ -16,7 +16,7 @@ func NewCell() *Cell {
 	cell.up = cell
 	cell.left = cell
 	cell.right = cell
-	_id = _id + 1
+	_id++
 	cell.id = _id
 	return cell
 }
@@ -52,66 +52,66 @@ func (cell *Cell) cellsGivenDirection(dir direction) []*Cell {
 	return cells
 }
 
-func (cell *Cell) cellsDown() []*Cell {
+func (cell *Cell) CellsDown() []*Cell {
 	return cell.cellsGivenDirection(down)
 }
 
-func (cell *Cell) cellsUp() []*Cell {
+func (cell *Cell) CellsUp() []*Cell {
 	return cell.cellsGivenDirection(up)
 }
 
-func (cell *Cell) cellsLeft() []*Cell {
+func (cell *Cell) CellsLeft() []*Cell {
 	return cell.cellsGivenDirection(left)
 }
 
-func (cell *Cell) cellsRight() []*Cell {
+func (cell *Cell) CellsRight() []*Cell {
 	return cell.cellsGivenDirection(right)
 }
 
-func (cell *Cell) addCellDown(toAdd *Cell) {
+func (cell *Cell) AddCellDown(toAdd *Cell) {
 	cell.down.up = toAdd
 	toAdd.down = cell.down
 	cell.down = toAdd
 	toAdd.up = cell
 }
 
-func (cell *Cell) addCellUp(toAdd *Cell) {
+func (cell *Cell) AddCellUp(toAdd *Cell) {
 	cell.up.down = toAdd
 	toAdd.up = cell.up
 	cell.up = toAdd
 	toAdd.down = cell
 }
 
-func (cell *Cell) addCellLeft(toAdd *Cell) {
+func (cell *Cell) AddCellLeft(toAdd *Cell) {
 	cell.left.right = toAdd
 	toAdd.left = cell.left
 	cell.left = toAdd
 	toAdd.right = cell
 }
 
-func (cell *Cell) addCellRight(toAdd *Cell) {
+func (cell *Cell) AddCellRight(toAdd *Cell) {
 	cell.right.left = toAdd
 	toAdd.right = cell.right
 	cell.right = toAdd
 	toAdd.left = cell
 }
 
-func (cell *Cell) removeVertically() {
+func (cell *Cell) RemoveVertically() {
 	cell.up.down = cell.down
 	cell.down.up = cell.up
 }
 
-func (cell *Cell) restoreVertically() {
+func (cell *Cell) RestoreVertically() {
 	cell.up.down = cell
 	cell.down.up = cell
 }
 
-func (cell *Cell) removeHorizontally() {
+func (cell *Cell) RemoveHorizontally() {
 	cell.right.left = cell.left
 	cell.left.right = cell.right
 }
 
-func (cell *Cell) restoreHorizontally() {
+func (cell *Cell) RestoreHorizontally() {
 	cell.right.left = cell
 	cell.left.right = cell
 }
