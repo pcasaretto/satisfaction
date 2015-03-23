@@ -1,146 +1,168 @@
-package dancinglinks
+package dancinglinks_test
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
+	. "github.com/pcasaretto/dancinglinks"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func TestNewCell(t *testing.T) {
-	Convey("A new cell should point to itself in the four directions", t, func() {
-		cell := NewCell()
-		So(cell.up, ShouldEqual, cell)
-		So(cell.down, ShouldEqual, cell)
-		So(cell.left, ShouldEqual, cell)
-		So(cell.right, ShouldEqual, cell)
-	})
-}
+var _ = Describe("Cell", func() {
+	Describe(".NewCell", func() {
+		It("creates a cell pointing to itself in the four directions", func() {
+			cell := NewCell(nil)
+			Expect(cell.Up()).To(Equal(cell))
+			Expect(cell.Down()).To(Equal(cell))
+			Expect(cell.Left()).To(Equal(cell))
+			Expect(cell.Right()).To(Equal(cell))
+		})
 
-func TestAddCellDown(t *testing.T) {
-	Convey("Cell#AddCellDown", t, func() {
-		cell := NewCell()
-		cell2 := NewCell()
-		Convey("should set up the connections properly", func() {
-			cell.AddCellDown(cell2)
-			So(cell.down, ShouldEqual, cell2)
-			So(cell.up, ShouldEqual, cell2)
-			So(cell2.down, ShouldEqual, cell)
-			So(cell2.up, ShouldEqual, cell)
+		It("sets the given value to Value", func() {
+			i := 1
+			cell := NewCell(i)
+			Expect(cell.Value).To(Equal(i))
 		})
 	})
-}
 
-func TestAddCellUp(t *testing.T) {
-	Convey("Cell#AddCellUp", t, func() {
-		cell := NewCell()
-		cell2 := NewCell()
-		Convey("should set up the connections properly", func() {
-			cell.AddCellUp(cell2)
-			So(cell.down, ShouldEqual, cell2)
-			So(cell.up, ShouldEqual, cell2)
-			So(cell2.down, ShouldEqual, cell)
-			So(cell2.up, ShouldEqual, cell)
+	Describe("#PushCellDown", func() {
+
+		var (
+			cell  *Cell
+			cell2 *Cell
+		)
+
+		BeforeEach(func() {
+			cell = NewCell(nil)
+			cell2 = NewCell(nil)
+			cell.PushCellDown(cell2)
+		})
+
+		It("should set up the connections properly", func() {
+			Expect(cell.Up()).To(Equal(cell2))
+			Expect(cell.Down()).To(Equal(cell2))
+			Expect(cell2.Up()).To(Equal(cell))
+			Expect(cell2.Down()).To(Equal(cell))
 		})
 	})
-}
 
-func TestAddCellLeft(t *testing.T) {
+	Describe("#PushCellUp", func() {
 
-	Convey("Cell#AddCellLeft", t, func() {
+		var (
+			cell  *Cell
+			cell2 *Cell
+		)
 
-		cell := NewCell()
-		cell2 := NewCell()
-
-		Convey("should set up the connections properly", func() {
-			cell.AddCellLeft(cell2)
-			So(cell.left, ShouldEqual, cell2)
-			So(cell.right, ShouldEqual, cell2)
-			So(cell2.left, ShouldEqual, cell)
-			So(cell2.right, ShouldEqual, cell)
+		BeforeEach(func() {
+			cell = NewCell(nil)
+			cell2 = NewCell(nil)
+			cell.PushCellUp(cell2)
 		})
 
-	})
-
-}
-
-func TestAddCellRight(t *testing.T) {
-	Convey("Cell#AddCellRight", t, func() {
-		cell := NewCell()
-		cell2 := NewCell()
-		Convey("should set up the connections properly", func() {
-			cell.AddCellRight(cell2)
-			So(cell.left, ShouldEqual, cell2)
-			So(cell.right, ShouldEqual, cell2)
-			So(cell2.left, ShouldEqual, cell)
-			So(cell2.right, ShouldEqual, cell)
+		It("should set up the connections properly", func() {
+			Expect(cell.Up()).To(Equal(cell2))
+			Expect(cell.Down()).To(Equal(cell2))
+			Expect(cell2.Up()).To(Equal(cell))
+			Expect(cell2.Down()).To(Equal(cell))
 		})
 	})
-}
 
-func TestCellsDown(t *testing.T) {
-	Convey("Cell#CellsDown", t, func() {
-		cell := NewCell()
+	Describe("#PushCellLeft", func() {
 
-		Convey("When there are no cells down", func() {
-			Convey("Returns an empty slice", func() {
-				So(cell.CellsDown(), ShouldBeEmpty)
-			})
+		var (
+			cell  *Cell
+			cell2 *Cell
+		)
+
+		BeforeEach(func() {
+			cell = NewCell(nil)
+			cell2 = NewCell(nil)
+			cell.PushCellLeft(cell2)
 		})
 
-		Convey("When there are some cells down", func() {
-			Convey("Returns the cells ordered", func() {
-				cell2 := NewCell()
-				cell3 := NewCell()
-				cell.AddCellDown(cell3)
-				cell.AddCellDown(cell2)
-				cells := cell.CellsDown()
-				So(len(cells), ShouldEqual, 2)
-				So(cells[0], ShouldEqual, cell2)
-				So(cells[1], ShouldEqual, cell3)
-			})
+		It("should set up the connections properly", func() {
+			Expect(cell.Left()).To(Equal(cell2))
+			Expect(cell.Right()).To(Equal(cell2))
+			Expect(cell2.Left()).To(Equal(cell))
+			Expect(cell2.Right()).To(Equal(cell))
 		})
 	})
-}
 
-func TestRemoveAndRestoreVertically(t *testing.T) {
-	Convey("", t, func() {
-		cell := NewCell()
-		cellUp := NewCell()
-		cellDown := NewCell()
-		cell.AddCellDown(cellDown)
-		cell.AddCellUp(cellUp)
-		cell.RemoveVertically()
-		Convey("Cell#RemoveVertically removes the cell from the horizontal line", func() {
-			So(cellUp.down, ShouldEqual, cellDown)
-			So(cellDown.up, ShouldEqual, cellUp)
+	Describe("#PushCellRight", func() {
+
+		var (
+			cell  *Cell
+			cell2 *Cell
+		)
+
+		BeforeEach(func() {
+			cell = NewCell(nil)
+			cell2 = NewCell(nil)
+			cell.PushCellRight(cell2)
 		})
-		cell.RestoreVertically()
-		Convey("Cell#RestoreVertically restores the cell to the horizontal line", func() {
-			So(cellUp.down, ShouldEqual, cell)
-			So(cell.up, ShouldEqual, cellUp)
-			So(cellDown.up, ShouldEqual, cell)
-			So(cell.down, ShouldEqual, cellDown)
+
+		It("should set up the connections properly", func() {
+			Expect(cell.Left()).To(Equal(cell2))
+			Expect(cell.Right()).To(Equal(cell2))
+			Expect(cell2.Left()).To(Equal(cell))
+			Expect(cell2.Right()).To(Equal(cell))
 		})
 	})
-}
 
-func TestRemoveAndRestoreHorizontally(t *testing.T) {
-	Convey("", t, func() {
-		cell := NewCell()
-		cellLeft := NewCell()
-		cellRight := NewCell()
-		cell.AddCellRight(cellRight)
-		cell.AddCellLeft(cellLeft)
-		cell.RemoveHorizontally()
-		Convey("Cell#RemoveHorizontally removes the cell from the horizontal line", func() {
-			So(cellLeft.right, ShouldEqual, cellRight)
-			So(cellRight.left, ShouldEqual, cellLeft)
+	Describe("removing and restoring vertically", func() {
+		var (
+			cell, cellUp, cellDown *Cell
+		)
+
+		BeforeEach(func() {
+			cell = NewCell(nil)
+			cellUp = NewCell(nil)
+			cellDown = NewCell(nil)
+			cell.PushCellDown(cellDown)
+			cell.PushCellUp(cellUp)
 		})
-		cell.RestoreHorizontally()
-		Convey("Cell#RestoreHorizontally restores the cell to the horizontal line", func() {
-			So(cellLeft.right, ShouldEqual, cell)
-			So(cell.left, ShouldEqual, cellLeft)
-			So(cellRight.left, ShouldEqual, cell)
-			So(cell.right, ShouldEqual, cellRight)
+
+		It("#RemoveVertically removes the cell from the vertical line", func() {
+			cell.RemoveVertically()
+			Expect(cellUp.Down()).To(Equal(cellDown))
+			Expect(cellDown.Up()).To(Equal(cellUp))
+		})
+
+		It("Cell#RestoreVertically restores the cell to the vertical line", func() {
+			cell.RemoveVertically()
+			cell.RestoreVertically()
+			Expect(cellUp.Down()).To(Equal(cell))
+			Expect(cellDown.Up()).To(Equal(cell))
+			Expect(cell.Up()).To(Equal(cellUp))
+			Expect(cell.Down()).To(Equal(cellDown))
 		})
 	})
-}
+
+	Describe("removing and restoring vertically", func() {
+		var (
+			cell, cellLeft, cellRight *Cell
+		)
+
+		BeforeEach(func() {
+			cell = NewCell(nil)
+			cellLeft = NewCell(nil)
+			cellRight = NewCell(nil)
+			cell.PushCellLeft(cellLeft)
+			cell.PushCellRight(cellRight)
+		})
+
+		It("#RemoveHorizontally removes the cell from the horizontal line", func() {
+			cell.RemoveHorizontally()
+			Expect(cellLeft.Left()).To(Equal(cellRight))
+			Expect(cellRight.Right()).To(Equal(cellLeft))
+		})
+
+		It("Cell#RestoreHorizontally restores the cell to the horizontal line", func() {
+			cell.RemoveHorizontally()
+			cell.RestoreHorizontally()
+			Expect(cellRight.Left()).To(Equal(cell))
+			Expect(cellLeft.Right()).To(Equal(cell))
+			Expect(cell.Left()).To(Equal(cellLeft))
+			Expect(cell.Right()).To(Equal(cellRight))
+		})
+	})
+})

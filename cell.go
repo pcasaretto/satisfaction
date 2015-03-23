@@ -1,5 +1,7 @@
 package dancinglinks
 
+import "fmt"
+
 var _id int = 0
 
 type Cell struct {
@@ -7,11 +9,12 @@ type Cell struct {
 	right *Cell
 	up    *Cell
 	down  *Cell
+	Value interface{}
 	id    int
 }
 
-func NewCell() *Cell {
-	cell := &Cell{}
+func NewCell(v interface{}) *Cell {
+	cell := &Cell{Value: v}
 	cell.down = cell
 	cell.up = cell
 	cell.left = cell
@@ -29,6 +32,10 @@ const (
 	left
 	right
 )
+
+func (cell *Cell) String() string {
+	return fmt.Sprintf("Cell id %d", cell.id)
+}
 
 func (cell *Cell) cellsGivenDirection(dir direction) []*Cell {
 	var cells []*Cell
@@ -68,28 +75,44 @@ func (cell *Cell) CellsRight() []*Cell {
 	return cell.cellsGivenDirection(right)
 }
 
-func (cell *Cell) AddCellDown(toAdd *Cell) {
+func (cell *Cell) Up() *Cell {
+	return cell.up
+}
+
+func (cell *Cell) Down() *Cell {
+	return cell.down
+}
+
+func (cell *Cell) Left() *Cell {
+	return cell.left
+}
+
+func (cell *Cell) Right() *Cell {
+	return cell.right
+}
+
+func (cell *Cell) PushCellDown(toAdd *Cell) {
 	cell.down.up = toAdd
 	toAdd.down = cell.down
 	cell.down = toAdd
 	toAdd.up = cell
 }
 
-func (cell *Cell) AddCellUp(toAdd *Cell) {
+func (cell *Cell) PushCellUp(toAdd *Cell) {
 	cell.up.down = toAdd
 	toAdd.up = cell.up
 	cell.up = toAdd
 	toAdd.down = cell
 }
 
-func (cell *Cell) AddCellLeft(toAdd *Cell) {
+func (cell *Cell) PushCellLeft(toAdd *Cell) {
 	cell.left.right = toAdd
 	toAdd.left = cell.left
 	cell.left = toAdd
 	toAdd.right = cell
 }
 
-func (cell *Cell) AddCellRight(toAdd *Cell) {
+func (cell *Cell) PushCellRight(toAdd *Cell) {
 	cell.right.left = toAdd
 	toAdd.right = cell.right
 	cell.right = toAdd
@@ -115,3 +138,29 @@ func (cell *Cell) RestoreHorizontally() {
 	cell.right.left = cell
 	cell.left.right = cell
 }
+
+// func (cell *Cell) Cover() {
+// 	cell.cover();
+// 	for _, cell = range cell.CellsDown() {
+// 		cell.cover();
+// 	}
+// }
+//
+// func (cell *Cell) cover() {
+// 	for _, cell = range cell.CellsRight() {
+// 		cell.RemoveVertically()
+// 	}
+// }
+//
+// func (cell *Cell) Uncover() {
+// 	for _, cell = range cell.CellsUp() {
+// 		cell.uncover();
+// 	}
+// 	cell.uncover();
+// }
+//
+// func (cell *Cell) uncover() {
+// 	for _, cell = range cell.CellsLeft() {
+// 		cell.RestoreVertically()
+// 	}
+// }
