@@ -4,17 +4,41 @@ import "fmt"
 
 var _id int = 0
 
-type Cell struct {
-	left  *Cell
-	right *Cell
-	up    *Cell
-	down  *Cell
-	Value interface{}
+type Cell interface {
+	Up() Cell
+	Down() Cell
+	Left() Cell
+	Right() Cell
+	PushCellDown(toAdd Cell)
+	PushCellUp(toAdd Cell)
+	PushCellLeft(toAdd Cell)
+	PushCellRight(toAdd Cell)
+	CellsDown() []Cell
+	CellsUp() []Cell
+	CellsLeft() []Cell
+	CellsRight() []Cell
+	RemoveVertically()
+	RestoreVertically()
+	RemoveHorizontally()
+	RestoreHorizontally()
+	Value() interface{}
+	setDown(toAdd Cell)
+	setUp(toAdd Cell)
+	setLeft(toAdd Cell)
+	setRight(toAdd Cell)
+}
+
+type BasicCell struct {
+	left  Cell
+	right Cell
+	up    Cell
+	down  Cell
+	value interface{}
 	id    int
 }
 
-func NewCell(v interface{}) *Cell {
-	cell := &Cell{Value: v}
+func NewCell(v interface{}) *BasicCell {
+	cell := &BasicCell{value: v}
 	cell.down = cell
 	cell.up = cell
 	cell.left = cell
@@ -33,24 +57,28 @@ const (
 	right
 )
 
-func (cell *Cell) String() string {
+func (cell *BasicCell) String() string {
 	return fmt.Sprintf("Cell id %d", cell.id)
 }
 
-func (cell *Cell) cellsGivenDirection(dir direction) []*Cell {
-	var cells []*Cell
+func (cell *BasicCell) Value() interface{} {
+	return cell.value
+}
 
-	var next func(c *Cell) *Cell
+func (cell *BasicCell) cellsGivenDirection(dir direction) []Cell {
+	var cells []Cell
+
+	var next func(c Cell) Cell
 
 	switch dir {
 	case up:
-		next = func(c *Cell) *Cell { return c.up }
+		next = func(c Cell) Cell { return c.Up() }
 	case down:
-		next = func(c *Cell) *Cell { return c.down }
+		next = func(c Cell) Cell { return c.Down() }
 	case left:
-		next = func(c *Cell) *Cell { return c.left }
+		next = func(c Cell) Cell { return c.Left() }
 	case right:
-		next = func(c *Cell) *Cell { return c.right }
+		next = func(c Cell) Cell { return c.Right() }
 	}
 
 	for c := next(cell); c != cell; c = next(c) {
@@ -59,84 +87,97 @@ func (cell *Cell) cellsGivenDirection(dir direction) []*Cell {
 	return cells
 }
 
-func (cell *Cell) CellsDown() []*Cell {
+func (cell *BasicCell) CellsDown() []Cell {
 	return cell.cellsGivenDirection(down)
 }
 
-func (cell *Cell) CellsUp() []*Cell {
+func (cell *BasicCell) CellsUp() []Cell {
 	return cell.cellsGivenDirection(up)
 }
 
-func (cell *Cell) CellsLeft() []*Cell {
+func (cell *BasicCell) CellsLeft() []Cell {
 	return cell.cellsGivenDirection(left)
 }
 
-func (cell *Cell) CellsRight() []*Cell {
+func (cell *BasicCell) CellsRight() []Cell {
 	return cell.cellsGivenDirection(right)
 }
 
-func (cell *Cell) Up() *Cell {
+func (cell *BasicCell) Up() Cell {
 	return cell.up
 }
 
-func (cell *Cell) Down() *Cell {
+func (cell *BasicCell) Down() Cell {
 	return cell.down
 }
 
-func (cell *Cell) Left() *Cell {
+func (cell *BasicCell) Left() Cell {
 	return cell.left
 }
 
-func (cell *Cell) Right() *Cell {
+func (cell *BasicCell) Right() Cell {
 	return cell.right
 }
 
-func (cell *Cell) PushCellDown(toAdd *Cell) {
-	cell.down.up = toAdd
-	toAdd.down = cell.down
-	cell.down = toAdd
-	toAdd.up = cell
+func (cell *BasicCell) PushCellDown(c Cell) {
+	cell.down.setUp(c)
+	c.setDown(cell.down)
+	cell.down = c
+	c.setUp(cell)
 }
 
-func (cell *Cell) PushCellUp(toAdd *Cell) {
-	cell.up.down = toAdd
-	toAdd.up = cell.up
-	cell.up = toAdd
-	toAdd.down = cell
+func (cell *BasicCell) PushCellUp(c Cell) {
+	cell.up.setDown(c)
+	c.setUp(cell.up)
+	cell.up = c
+	c.setDown(cell)
 }
 
-func (cell *Cell) PushCellLeft(toAdd *Cell) {
-	cell.left.right = toAdd
-	toAdd.left = cell.left
-	cell.left = toAdd
-	toAdd.right = cell
+func (cell *BasicCell) PushCellLeft(c Cell) {
+	cell.left.setRight(c)
+	c.setLeft(cell.left)
+	cell.left = c
+	c.setRight(cell)
 }
 
-func (cell *Cell) PushCellRight(toAdd *Cell) {
-	cell.right.left = toAdd
-	toAdd.right = cell.right
-	cell.right = toAdd
-	toAdd.left = cell
+func (cell *BasicCell) PushCellRight(c Cell) {
+	cell.right.setLeft(c)
+	c.setRight(cell.right)
+	cell.right = c
+	c.setLeft(cell)
 }
 
-func (cell *Cell) RemoveVertically() {
-	cell.up.down = cell.down
-	cell.down.up = cell.up
+func (c *BasicCell) setDown(toAdd Cell) {
+	c.down = toAdd
+}
+func (c *BasicCell) setUp(toAdd Cell) {
+	c.up = toAdd
+}
+func (c *BasicCell) setLeft(toAdd Cell) {
+	c.left = toAdd
+}
+func (c *BasicCell) setRight(toAdd Cell) {
+	c.right = toAdd
 }
 
-func (cell *Cell) RestoreVertically() {
-	cell.up.down = cell
-	cell.down.up = cell
+func (cell *BasicCell) RemoveVertically() {
+	cell.up.setDown(cell.down)
+	cell.down.setUp(cell.up)
 }
 
-func (cell *Cell) RemoveHorizontally() {
-	cell.right.left = cell.left
-	cell.left.right = cell.right
+func (cell *BasicCell) RestoreVertically() {
+	cell.up.setDown(cell)
+	cell.down.setUp(cell)
 }
 
-func (cell *Cell) RestoreHorizontally() {
-	cell.right.left = cell
-	cell.left.right = cell
+func (cell *BasicCell) RemoveHorizontally() {
+	cell.right.setLeft(cell.left)
+	cell.left.setRight(cell.right)
+}
+
+func (cell *BasicCell) RestoreHorizontally() {
+	cell.right.setLeft(cell)
+	cell.left.setRight(cell)
 }
 
 // func (cell *Cell) Cover() {

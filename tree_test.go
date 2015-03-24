@@ -28,9 +28,9 @@ func (l *LatinSquare) Constraints() []Constraint {
 	for row := 1; row <= l.size; row++ {
 		for column := 1; column <= l.size; column++ {
 
-      // loop variable is reused for each iteration
-      row := row
-      column := column
+			// loop variable is reused for each iteration
+			row := row
+			column := column
 
 			// There must be a number in each cell
 			f = func(c Possibility) bool {
@@ -69,7 +69,28 @@ func (l *LatinSquare) Possibilities() []Possibility {
 	return array
 }
 
-var _ = Describe("Cell", func() {
+var _ = Describe("ConstraintMatrix", func() {
+	Describe("#FindSolution()", func() {
+
+		var (
+			problem ExactCoverProblem
+			matrix  *ConstraintMatrix
+		)
+
+		Context("for a size 1 Latin Square", func() {
+
+			BeforeEach(func() {
+				problem = NewLatinSquare(1)
+				matrix = NewConstraintMatrix(problem)
+			})
+
+			It("finds the right solutions", func() {
+				solution := matrix.FindSolution()
+				expected := LatinSquareCell{1, 1, 1}
+				Expect(solution).To(ConsistOf(expected))
+			})
+		})
+	})
 	It("works", func() {
 		matrix := NewConstraintMatrix(NewLatinSquare(1))
 		fmt.Println(matrix)

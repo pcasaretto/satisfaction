@@ -5,30 +5,33 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 )
 
+
 var _ = Describe("Cell", func() {
+	format.UseStringerRepresentation = true
 	Describe(".NewCell", func() {
 		It("creates a cell pointing to itself in the four directions", func() {
 			cell := NewCell(nil)
-			Expect(cell.Up()).To(Equal(cell))
-			Expect(cell.Down()).To(Equal(cell))
-			Expect(cell.Left()).To(Equal(cell))
-			Expect(cell.Right()).To(Equal(cell))
+			Expect(cell.Up()).To(BeEquivalentTo(cell))
+			Expect(cell.Down()).To(BeEquivalentTo(cell))
+			Expect(cell.Left()).To(BeEquivalentTo(cell))
+			Expect(cell.Right()).To(BeEquivalentTo(cell))
 		})
 
 		It("sets the given value to Value", func() {
 			i := 1
 			cell := NewCell(i)
-			Expect(cell.Value).To(Equal(i))
+			Expect(cell.Value()).To(BeEquivalentTo(i))
 		})
 	})
 
 	Describe("#PushCellDown", func() {
 
 		var (
-			cell  *Cell
-			cell2 *Cell
+			cell  *BasicCell
+			cell2 *BasicCell
 		)
 
 		BeforeEach(func() {
@@ -38,18 +41,18 @@ var _ = Describe("Cell", func() {
 		})
 
 		It("should set up the connections properly", func() {
-			Expect(cell.Up()).To(Equal(cell2))
-			Expect(cell.Down()).To(Equal(cell2))
-			Expect(cell2.Up()).To(Equal(cell))
-			Expect(cell2.Down()).To(Equal(cell))
+			Expect(cell.Up()).To(BeEquivalentTo(cell2))
+			Expect(cell.Down()).To(BeEquivalentTo(cell2))
+			Expect(cell2.Up()).To(BeEquivalentTo(cell))
+			Expect(cell2.Down()).To(BeEquivalentTo(cell))
 		})
 	})
 
 	Describe("#PushCellUp", func() {
 
 		var (
-			cell  *Cell
-			cell2 *Cell
+			cell  *BasicCell
+			cell2 *BasicCell
 		)
 
 		BeforeEach(func() {
@@ -59,18 +62,18 @@ var _ = Describe("Cell", func() {
 		})
 
 		It("should set up the connections properly", func() {
-			Expect(cell.Up()).To(Equal(cell2))
-			Expect(cell.Down()).To(Equal(cell2))
-			Expect(cell2.Up()).To(Equal(cell))
-			Expect(cell2.Down()).To(Equal(cell))
+			Expect(cell.Up()).To(BeEquivalentTo(cell2))
+			Expect(cell.Down()).To(BeEquivalentTo(cell2))
+			Expect(cell2.Up()).To(BeEquivalentTo(cell))
+			Expect(cell2.Down()).To(BeEquivalentTo(cell))
 		})
 	})
 
 	Describe("#PushCellLeft", func() {
 
 		var (
-			cell  *Cell
-			cell2 *Cell
+			cell  *BasicCell
+			cell2 *BasicCell
 		)
 
 		BeforeEach(func() {
@@ -80,18 +83,18 @@ var _ = Describe("Cell", func() {
 		})
 
 		It("should set up the connections properly", func() {
-			Expect(cell.Left()).To(Equal(cell2))
-			Expect(cell.Right()).To(Equal(cell2))
-			Expect(cell2.Left()).To(Equal(cell))
-			Expect(cell2.Right()).To(Equal(cell))
+			Expect(cell.Left()).To(BeEquivalentTo(cell2))
+			Expect(cell.Right()).To(BeEquivalentTo(cell2))
+			Expect(cell2.Left()).To(BeEquivalentTo(cell))
+			Expect(cell2.Right()).To(BeEquivalentTo(cell))
 		})
 	})
 
 	Describe("#PushCellRight", func() {
 
 		var (
-			cell  *Cell
-			cell2 *Cell
+			cell  *BasicCell
+			cell2 *BasicCell
 		)
 
 		BeforeEach(func() {
@@ -101,16 +104,16 @@ var _ = Describe("Cell", func() {
 		})
 
 		It("should set up the connections properly", func() {
-			Expect(cell.Left()).To(Equal(cell2))
-			Expect(cell.Right()).To(Equal(cell2))
-			Expect(cell2.Left()).To(Equal(cell))
-			Expect(cell2.Right()).To(Equal(cell))
+			Expect(cell.Left()).To(BeEquivalentTo(cell2))
+			Expect(cell.Right()).To(BeEquivalentTo(cell2))
+			Expect(cell2.Left()).To(BeEquivalentTo(cell))
+			Expect(cell2.Right()).To(BeEquivalentTo(cell))
 		})
 	})
 
 	Describe("removing and restoring vertically", func() {
 		var (
-			cell, cellUp, cellDown *Cell
+			cell, cellUp, cellDown *BasicCell
 		)
 
 		BeforeEach(func() {
@@ -123,23 +126,23 @@ var _ = Describe("Cell", func() {
 
 		It("#RemoveVertically removes the cell from the vertical line", func() {
 			cell.RemoveVertically()
-			Expect(cellUp.Down()).To(Equal(cellDown))
-			Expect(cellDown.Up()).To(Equal(cellUp))
+			Expect(cellUp.Down()).To(BeEquivalentTo(cellDown))
+			Expect(cellDown.Up()).To(BeEquivalentTo(cellUp))
 		})
 
 		It("Cell#RestoreVertically restores the cell to the vertical line", func() {
 			cell.RemoveVertically()
 			cell.RestoreVertically()
-			Expect(cellUp.Down()).To(Equal(cell))
-			Expect(cellDown.Up()).To(Equal(cell))
-			Expect(cell.Up()).To(Equal(cellUp))
-			Expect(cell.Down()).To(Equal(cellDown))
+			Expect(cellUp.Down()).To(BeEquivalentTo(cell))
+			Expect(cellDown.Up()).To(BeEquivalentTo(cell))
+			Expect(cell.Up()).To(BeEquivalentTo(cellUp))
+			Expect(cell.Down()).To(BeEquivalentTo(cellDown))
 		})
 	})
 
 	Describe("removing and restoring vertically", func() {
 		var (
-			cell, cellLeft, cellRight *Cell
+			cell, cellLeft, cellRight *BasicCell
 		)
 
 		BeforeEach(func() {
@@ -152,17 +155,17 @@ var _ = Describe("Cell", func() {
 
 		It("#RemoveHorizontally removes the cell from the horizontal line", func() {
 			cell.RemoveHorizontally()
-			Expect(cellLeft.Left()).To(Equal(cellRight))
-			Expect(cellRight.Right()).To(Equal(cellLeft))
+			Expect(cellLeft.Left()).To(BeEquivalentTo(cellRight))
+			Expect(cellRight.Right()).To(BeEquivalentTo(cellLeft))
 		})
 
 		It("Cell#RestoreHorizontally restores the cell to the horizontal line", func() {
 			cell.RemoveHorizontally()
 			cell.RestoreHorizontally()
-			Expect(cellRight.Left()).To(Equal(cell))
-			Expect(cellLeft.Right()).To(Equal(cell))
-			Expect(cell.Left()).To(Equal(cellLeft))
-			Expect(cell.Right()).To(Equal(cellRight))
+			Expect(cellRight.Left()).To(BeEquivalentTo(cell))
+			Expect(cellLeft.Right()).To(BeEquivalentTo(cell))
+			Expect(cell.Left()).To(BeEquivalentTo(cellLeft))
+			Expect(cell.Right()).To(BeEquivalentTo(cellRight))
 		})
 	})
 })
