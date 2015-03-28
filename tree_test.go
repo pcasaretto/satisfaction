@@ -3,7 +3,6 @@ package dancinglinks_test
 import (
 	. "github.com/pcasaretto/dancinglinks"
 
-	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -91,9 +90,5 @@ var _ = Describe("ConstraintMatrix", func() {
 			})
 		})
 	})
-	It("works", func() {
-		matrix := NewConstraintMatrix(NewLatinSquare(1))
-		fmt.Println(matrix)
-		Expect(1).To(Equal(1))
-	})
+
 })

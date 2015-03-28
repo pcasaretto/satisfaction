@@ -8,7 +8,6 @@ import (
 	"github.com/onsi/gomega/format"
 )
 
-
 var _ = Describe("Cell", func() {
 	format.UseStringerRepresentation = true
 	Describe(".NewCell", func() {

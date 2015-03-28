@@ -13,10 +13,6 @@ type Cell interface {
 	PushCellUp(toAdd Cell)
 	PushCellLeft(toAdd Cell)
 	PushCellRight(toAdd Cell)
-	CellsDown() []Cell
-	CellsUp() []Cell
-	CellsLeft() []Cell
-	CellsRight() []Cell
 	RemoveVertically()
 	RestoreVertically()
 	RemoveHorizontally()
@@ -63,44 +59,6 @@ func (cell *BasicCell) String() string {
 
 func (cell *BasicCell) Value() interface{} {
 	return cell.value
-}
-
-func (cell *BasicCell) cellsGivenDirection(dir direction) []Cell {
-	var cells []Cell
-
-	var next func(c Cell) Cell
-
-	switch dir {
-	case up:
-		next = func(c Cell) Cell { return c.Up() }
-	case down:
-		next = func(c Cell) Cell { return c.Down() }
-	case left:
-		next = func(c Cell) Cell { return c.Left() }
-	case right:
-		next = func(c Cell) Cell { return c.Right() }
-	}
-
-	for c := next(cell); c != cell; c = next(c) {
-		cells = append(cells, c)
-	}
-	return cells
-}
-
-func (cell *BasicCell) CellsDown() []Cell {
-	return cell.cellsGivenDirection(down)
-}
-
-func (cell *BasicCell) CellsUp() []Cell {
-	return cell.cellsGivenDirection(up)
-}
-
-func (cell *BasicCell) CellsLeft() []Cell {
-	return cell.cellsGivenDirection(left)
-}
-
-func (cell *BasicCell) CellsRight() []Cell {
-	return cell.cellsGivenDirection(right)
 }
 
 func (cell *BasicCell) Up() Cell {
@@ -179,29 +137,3 @@ func (cell *BasicCell) RestoreHorizontally() {
 	cell.right.setLeft(cell)
 	cell.left.setRight(cell)
 }
-
-// func (cell *Cell) Cover() {
-// 	cell.cover();
-// 	for _, cell = range cell.CellsDown() {
-// 		cell.cover();
-// 	}
-// }
-//
-// func (cell *Cell) cover() {
-// 	for _, cell = range cell.CellsRight() {
-// 		cell.RemoveVertically()
-// 	}
-// }
-//
-// func (cell *Cell) Uncover() {
-// 	for _, cell = range cell.CellsUp() {
-// 		cell.uncover();
-// 	}
-// 	cell.uncover();
-// }
-//
-// func (cell *Cell) uncover() {
-// 	for _, cell = range cell.CellsLeft() {
-// 		cell.RestoreVertically()
-// 	}
-// }
