@@ -1,7 +1,7 @@
-package dancinglinks_test
+package satisfaction_test
 
 import (
-	. "github.com/pcasaretto/dancinglinks"
+	. "github.com/pcasaretto/satisfaction"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

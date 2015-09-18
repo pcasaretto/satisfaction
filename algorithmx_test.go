@@ -1,7 +1,7 @@
-package dancinglinks_test
+package satisfaction_test
 
 import (
-	. "github.com/pcasaretto/dancinglinks"
+	. "github.com/pcasaretto/satisfaction"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -72,7 +72,7 @@ var _ = Describe("ConstraintMatrix", func() {
 	Describe("#FindSolution()", func() {
 
 		var (
-			problem ExactCoverProblem
+			problem Problem
 			matrix  *ConstraintMatrix
 		)
 
@@ -87,6 +87,24 @@ var _ = Describe("ConstraintMatrix", func() {
 				solution := matrix.FindSolution()
 				expected := LatinSquareCell{1, 1, 1}
 				Expect(solution).To(ConsistOf(expected))
+			})
+		})
+
+		Context("for a size 2 Latin Square", func() {
+
+			BeforeEach(func() {
+				problem = NewLatinSquare(2)
+				matrix = NewConstraintMatrix(problem)
+			})
+
+			It("finds the right solutions", func() {
+				solution := matrix.FindSolution()
+				Expect(solution).To(ConsistOf(
+					LatinSquareCell{1, 1, 1},
+					LatinSquareCell{1, 2, 1},
+					LatinSquareCell{1, 2, 2},
+					LatinSquareCell{2, 2, 2},
+				))
 			})
 		})
 	})

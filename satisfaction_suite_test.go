@@ -1,4 +1,4 @@
-package dancinglinks_test
+package satisfaction_test
 
 import (
 	. "github.com/onsi/ginkgo"

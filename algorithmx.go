@@ -1,23 +1,14 @@
-package dancinglinks
+package satisfaction
 
 import (
 	"bytes"
 	"fmt"
 )
 
-type ExactCoverProblem interface {
-	Constraints() []Constraint
-	Possibilities() []Possibility
-}
-
-type Constraint func(Possibility) bool
-
-type Thing struct {
+type thing struct {
 	header *HeaderCell
 	value  Possibility
 }
-
-type Possibility interface{}
 
 type HeaderCell struct {
 	*BasicCell
@@ -87,17 +78,17 @@ func (c *ConstraintMatrix) solve(out chan Possibility, btrack chan bool, found c
 	}
 	headerCell.cover()
 	for cell := headerCell.Down(); cell != headerCell; cell = cell.Down() {
-		thing := cell.Value().(Thing)
-		out <- thing.value
+		t := cell.Value().(thing)
+		out <- t.value
 		for neighbor := cell.Right(); neighbor != cell; neighbor = neighbor.Right() {
-			thing = neighbor.Value().(Thing)
-			thing.header.cover()
+			t = neighbor.Value().(thing)
+			t.header.cover()
 		}
 		c.solve(out, btrack, found)
 		btrack <- true
 		for neighbor := cell.Right(); neighbor != cell; neighbor = neighbor.Right() {
-			thing = neighbor.Value().(Thing)
-			thing.header.uncover()
+			t = neighbor.Value().(thing)
+			t.header.uncover()
 		}
 		headerCell.uncover()
 	}
@@ -139,7 +130,7 @@ func (c *ConstraintMatrix) String() string {
 	return b.String()
 }
 
-func NewConstraintMatrix(problem ExactCoverProblem) *ConstraintMatrix {
+func NewConstraintMatrix(problem Problem) *ConstraintMatrix {
 	root := NewHeaderCell(nil)
 
 	for _, constraint := range problem.Constraints() {
@@ -151,7 +142,7 @@ func NewConstraintMatrix(problem ExactCoverProblem) *ConstraintMatrix {
 		for header := root.Right(); header != root; header = header.Right() {
 			constraint := header.Value().(Constraint)
 			if constraint(possibility) {
-				thing := Thing{
+				thing := thing{
 					header: header.(*HeaderCell),
 					value:  possibility,
 				}
