@@ -11,10 +11,6 @@ type Problem interface {
 
 type Solution []Possibility
 
-type SolveOptions struct {
-	Limit int
-}
-
 type Solver interface {
-	Solve(Problem, SolveOptions) ([]Solution, error)
+	Solve(p Problem, solutions chan<- Solution, done <-chan struct{}) error
 }

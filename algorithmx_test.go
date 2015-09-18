@@ -68,43 +68,26 @@ func (l *LatinSquare) Possibilities() []Possibility {
 	return array
 }
 
-var _ = Describe("ConstraintMatrix", func() {
-	Describe("#FindSolution()", func() {
+var _ = Describe("AlgorithmX", func() {
+	Describe("#Solve", func() {
 
 		var (
 			problem Problem
-			matrix  *ConstraintMatrix
+			solver  Solver
 		)
 
 		Context("for a size 1 Latin Square", func() {
 
 			BeforeEach(func() {
 				problem = NewLatinSquare(1)
-				matrix = NewConstraintMatrix(problem)
+				solver = AlgorithmX{}
 			})
 
 			It("finds the right solutions", func() {
-				solution := matrix.FindSolution()
 				expected := LatinSquareCell{1, 1, 1}
-				Expect(solution).To(ConsistOf(expected))
-			})
-		})
-
-		Context("for a size 2 Latin Square", func() {
-
-			BeforeEach(func() {
-				problem = NewLatinSquare(2)
-				matrix = NewConstraintMatrix(problem)
-			})
-
-			It("finds the right solutions", func() {
-				solution := matrix.FindSolution()
-				Expect(solution).To(ConsistOf(
-					LatinSquareCell{1, 1, 1},
-					LatinSquareCell{1, 2, 1},
-					LatinSquareCell{1, 2, 2},
-					LatinSquareCell{2, 2, 2},
-				))
+				ch := make(chan Solution)
+				solver.Solve(problem, ch, make(chan struct{}))
+				Expect(<-ch).To(ConsistOf(expected))
 			})
 		})
 	})

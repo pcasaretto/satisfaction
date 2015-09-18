@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type thing struct {
+type container struct {
 	header *HeaderCell
 	value  Possibility
 }
@@ -49,11 +49,11 @@ func (cell *HeaderCell) PushCellRight(c Cell) {
 	cell.size++
 }
 
-type ConstraintMatrix struct {
+type constraintMatrix struct {
 	root *HeaderCell
 }
 
-func (c *ConstraintMatrix) Len() int {
+func (c *constraintMatrix) Len() int {
 	var i int
 	for cell := c.root.Left(); cell != c.root; cell = cell.Right() {
 		i++
@@ -61,7 +61,7 @@ func (c *ConstraintMatrix) Len() int {
 	return i
 }
 
-func (c *ConstraintMatrix) chooseUnsatisfiedConstraint() *HeaderCell {
+func (c *constraintMatrix) chooseUnsatisfiedConstraint() *HeaderCell {
 	cell := c.root.Right().(*HeaderCell)
 	if cell != c.root {
 		return cell
@@ -69,7 +69,7 @@ func (c *ConstraintMatrix) chooseUnsatisfiedConstraint() *HeaderCell {
 	return nil
 }
 
-func (c *ConstraintMatrix) solve(out chan Possibility, btrack chan bool, found chan bool) {
+func (c *constraintMatrix) solve(out chan Possibility, btrack chan bool, found chan bool) {
 	headerCell := c.chooseUnsatisfiedConstraint()
 	if headerCell == nil {
 		// Reached end of tree, backtrack and find next solution
@@ -78,45 +78,23 @@ func (c *ConstraintMatrix) solve(out chan Possibility, btrack chan bool, found c
 	}
 	headerCell.cover()
 	for cell := headerCell.Down(); cell != headerCell; cell = cell.Down() {
-		t := cell.Value().(thing)
+		t := cell.Value().(container)
 		out <- t.value
 		for neighbor := cell.Right(); neighbor != cell; neighbor = neighbor.Right() {
-			t = neighbor.Value().(thing)
+			t = neighbor.Value().(container)
 			t.header.cover()
 		}
 		c.solve(out, btrack, found)
 		btrack <- true
 		for neighbor := cell.Right(); neighbor != cell; neighbor = neighbor.Right() {
-			t = neighbor.Value().(thing)
+			t = neighbor.Value().(container)
 			t.header.uncover()
 		}
 		headerCell.uncover()
 	}
 }
 
-func (c *ConstraintMatrix) FindSolution() []Possibility {
-
-	solution_channel := make(chan Possibility)
-	backtrack := make(chan bool)
-	found_solution := make(chan bool)
-
-	solutions := make([]Possibility, 0, c.Len())
-	go c.solve(solution_channel, backtrack, found_solution)
-loop:
-	for {
-		select {
-		case s := <-solution_channel:
-			solutions = append(solutions, s)
-		case <-backtrack:
-			solutions = solutions[:len(solutions)-1]
-		case <-found_solution:
-			break loop
-		}
-	}
-	return solutions
-}
-
-func (c *ConstraintMatrix) String() string {
+func (c *constraintMatrix) String() string {
 	var b bytes.Buffer
 	var i int
 	for header := c.root.Right(); header != c.root; header = header.Right() {
@@ -130,7 +108,7 @@ func (c *ConstraintMatrix) String() string {
 	return b.String()
 }
 
-func NewConstraintMatrix(problem Problem) *ConstraintMatrix {
+func newConstraintMatrix(problem Problem) *constraintMatrix {
 	root := NewHeaderCell(nil)
 
 	for _, constraint := range problem.Constraints() {
@@ -142,11 +120,11 @@ func NewConstraintMatrix(problem Problem) *ConstraintMatrix {
 		for header := root.Right(); header != root; header = header.Right() {
 			constraint := header.Value().(Constraint)
 			if constraint(possibility) {
-				thing := thing{
+				container := container{
 					header: header.(*HeaderCell),
 					value:  possibility,
 				}
-				newCell := NewCell(thing)
+				newCell := NewCell(container)
 				if lastCell != nil {
 					lastCell.PushCellRight(newCell)
 				}
@@ -156,5 +134,36 @@ func NewConstraintMatrix(problem Problem) *ConstraintMatrix {
 		}
 	}
 
-	return &ConstraintMatrix{root}
+	return &constraintMatrix{root}
+}
+
+type AlgorithmX struct {
+}
+
+func (a AlgorithmX) Solve(p Problem, out chan<- Solution, done <-chan struct{}) error {
+	cMatrix := newConstraintMatrix(p)
+
+	possibleSolutions := make(chan Possibility)
+	backtrack := make(chan bool)
+	foundSolution := make(chan bool)
+
+	solution := make(Solution, 0, cMatrix.Len())
+	go cMatrix.solve(possibleSolutions, backtrack, foundSolution)
+	go func() {
+	loop:
+		for {
+			select {
+			case s := <-possibleSolutions:
+				solution = append(solution, s)
+			case <-backtrack:
+				solution = solution[:len(solution)-1]
+			case <-foundSolution:
+				out <- solution
+			case <-done:
+				break loop
+			}
+		}
+	}()
+
+	return nil
 }
