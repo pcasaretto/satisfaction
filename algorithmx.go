@@ -5,11 +5,6 @@ import (
 	"fmt"
 )
 
-type container struct {
-	header *cell
-	value  Possibility
-}
-
 var matrix *constraintMatrix
 
 type constraintMatrix struct {
@@ -25,11 +20,18 @@ func (c *constraintMatrix) Len() int {
 }
 
 func (c *constraintMatrix) chooseUnsatisfiedConstraint() *cell {
-	cell := c.root.right
-	if cell != c.root {
-		return cell
+	minCell := c.root.right
+	if minCell == c.root {
+		return nil
 	}
-	return nil
+
+	for i := c.root.right; i != c.root; i = i.right {
+		if i.size < minCell.size {
+			minCell = i
+		}
+	}
+
+	return minCell
 }
 
 func (c *constraintMatrix) String() string {
@@ -75,16 +77,14 @@ func newConstraintMatrix(problem Problem) *constraintMatrix {
 		for header := root.right; header != root; header = header.right {
 			constraint := header.value.(Constraint)
 			if constraint(possibility) {
-				container := container{
-					header: header,
-					value:  possibility,
-				}
-				newCell := NewCell(container)
+				newCell := NewCell(possibility)
+				newCell.header = header
 				if lastCell != nil {
 					lastCell.PushCellRight(newCell)
 				}
 				lastCell = newCell
 				header.PushCellDown(newCell)
+				header.size++
 			}
 		}
 	}
@@ -101,17 +101,14 @@ func (c *constraintMatrix) solve(out chan Possibility, btrack chan struct{}, fou
 	}
 	headerCell.cover()
 	for cell := headerCell.down; cell != headerCell; cell = cell.down {
-		t := cell.value.(container)
-		out <- t.value
+		out <- cell.value
 		for neighbor := cell.right; neighbor != cell; neighbor = neighbor.right {
-			t = neighbor.value.(container)
-			t.header.cover()
+			neighbor.header.cover()
 		}
 		c.solve(out, btrack, found)
 		btrack <- struct{}{}
 		for neighbor := cell.left; neighbor != cell; neighbor = neighbor.left {
-			t = neighbor.value.(container)
-			t.header.uncover()
+			neighbor.header.uncover()
 		}
 	}
 	headerCell.uncover()

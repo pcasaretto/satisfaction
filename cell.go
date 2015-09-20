@@ -5,13 +5,14 @@ import "fmt"
 var _id uint64 = 0
 
 type cell struct {
-	left  *cell
-	right *cell
-	up    *cell
-	down  *cell
-	value interface{}
-	size  uint
-	id    uint64
+	left   *cell
+	right  *cell
+	up     *cell
+	down   *cell
+	header *cell
+	value  interface{}
+	size   uint
+	id     uint64
 }
 
 func NewCell(v interface{}) *cell {
@@ -108,6 +109,7 @@ func (c *cell) cover() {
 	for i := c.down; i != c; i = i.down {
 		for j := i.right; j != i; j = j.right {
 			j.RemoveVertically()
+			j.header.size--
 		}
 	}
 }
@@ -116,6 +118,7 @@ func (c *cell) uncover() {
 	for i := c.up; i != c; i = i.up {
 		for j := i.left; j != i; j = j.left {
 			j.RestoreVertically()
+			j.header.size++
 		}
 	}
 	c.RestoreHorizontally()

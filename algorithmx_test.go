@@ -1,6 +1,8 @@
 package satisfaction_test
 
 import (
+	"fmt"
+
 	. "github.com/pcasaretto/satisfaction"
 
 	. "github.com/onsi/ginkgo"
@@ -111,6 +113,35 @@ var _ = Describe("AlgorithmX", func() {
 			})
 		})
 
+		Context("for a size 3 Latin Square", func() {
+
+			BeforeEach(func() {
+				problem = NewLatinSquare(3)
+			})
+
+			It("finds all solutions", func() {
+				solutions := make([]Solution, 0, 12)
+				ch := make(chan Solution)
+				solver.Solve(problem, ch, make(chan struct{}))
+				for s := range ch {
+					solutions = append(solutions, s)
+				}
+				Expect(len(solutions)).To(Equal(12))
+			})
+		})
+
+		Measure("it should do something hard efficiently", func(b Benchmarker) {
+			ch := make(chan Solution)
+			problem = NewLatinSquare(4)
+			solutions := 0
+			b.Time("runtime", func() {
+				solver.Solve(problem, ch, make(chan struct{}))
+				for range ch {
+					solutions++
+				}
+				fmt.Printf("Found %d solutions", solutions)
+			})
+		}, 10)
 	})
 
 })
