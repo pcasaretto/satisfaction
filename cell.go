@@ -2,39 +2,40 @@ package satisfaction
 
 import "fmt"
 
-var _id int = 0
+var _id uint64 = 0
 
-type Cell interface {
-	Up() Cell
-	Down() Cell
-	Left() Cell
-	Right() Cell
-	PushCellDown(toAdd Cell)
-	PushCellUp(toAdd Cell)
-	PushCellLeft(toAdd Cell)
-	PushCellRight(toAdd Cell)
+type CellInterface interface {
+	Up() cell
+	Down() cell
+	Left() cell
+	Right() cell
+	PushCellDown(toAdd cell)
+	PushCellUp(toAdd cell)
+	PushCellLeft(toAdd cell)
+	PushCellRight(toAdd cell)
 	RemoveVertically()
 	RestoreVertically()
 	RemoveHorizontally()
 	RestoreHorizontally()
 	Value() interface{}
-	setDown(toAdd Cell)
-	setUp(toAdd Cell)
-	setLeft(toAdd Cell)
-	setRight(toAdd Cell)
+	setDown(toAdd cell)
+	setUp(toAdd cell)
+	setLeft(toAdd cell)
+	setRight(toAdd cell)
 }
 
-type BasicCell struct {
-	left  Cell
-	right Cell
-	up    Cell
-	down  Cell
+type cell struct {
+	left  *cell
+	right *cell
+	up    *cell
+	down  *cell
 	value interface{}
-	id    int
+	size  uint
+	id    uint64
 }
 
-func NewCell(v interface{}) *BasicCell {
-	cell := &BasicCell{value: v}
+func NewCell(v interface{}) *cell {
+	cell := &cell{value: v}
 	cell.down = cell
 	cell.up = cell
 	cell.left = cell
@@ -53,87 +54,92 @@ const (
 	right
 )
 
-func (cell *BasicCell) String() string {
-	return fmt.Sprintf("Cell id %d", cell.id)
+func (c *cell) String() string {
+	return fmt.Sprintf("Cell id %d", c.id)
 }
 
-func (cell *BasicCell) Value() interface{} {
-	return cell.value
+func (c *cell) Value() interface{} {
+	return c.value
 }
 
-func (cell *BasicCell) Up() Cell {
-	return cell.up
+func (c *cell) PushCellDown(other *cell) {
+	c.down.setUp(other)
+	other.setDown(c.down)
+	c.down = other
+	other.setUp(c)
 }
 
-func (cell *BasicCell) Down() Cell {
-	return cell.down
+func (c *cell) PushCellUp(other *cell) {
+	c.up.setDown(other)
+	other.setUp(c.up)
+	c.up = other
+	other.setDown(c)
 }
 
-func (cell *BasicCell) Left() Cell {
-	return cell.left
+func (c *cell) PushCellLeft(other *cell) {
+	c.left.setRight(other)
+	other.setLeft(c.left)
+	c.left = other
+	other.setRight(c)
 }
 
-func (cell *BasicCell) Right() Cell {
-	return cell.right
+func (c *cell) PushCellRight(other *cell) {
+	c.right.setLeft(other)
+	other.setRight(c.right)
+	c.right = other
+	other.setLeft(c)
 }
 
-func (cell *BasicCell) PushCellDown(c Cell) {
-	cell.down.setUp(c)
-	c.setDown(cell.down)
-	cell.down = c
-	c.setUp(cell)
-}
-
-func (cell *BasicCell) PushCellUp(c Cell) {
-	cell.up.setDown(c)
-	c.setUp(cell.up)
-	cell.up = c
-	c.setDown(cell)
-}
-
-func (cell *BasicCell) PushCellLeft(c Cell) {
-	cell.left.setRight(c)
-	c.setLeft(cell.left)
-	cell.left = c
-	c.setRight(cell)
-}
-
-func (cell *BasicCell) PushCellRight(c Cell) {
-	cell.right.setLeft(c)
-	c.setRight(cell.right)
-	cell.right = c
-	c.setLeft(cell)
-}
-
-func (c *BasicCell) setDown(toAdd Cell) {
+func (c *cell) setDown(toAdd *cell) {
 	c.down = toAdd
 }
-func (c *BasicCell) setUp(toAdd Cell) {
+func (c *cell) setUp(toAdd *cell) {
 	c.up = toAdd
 }
-func (c *BasicCell) setLeft(toAdd Cell) {
+func (c *cell) setLeft(toAdd *cell) {
 	c.left = toAdd
 }
-func (c *BasicCell) setRight(toAdd Cell) {
+func (c *cell) setRight(toAdd *cell) {
 	c.right = toAdd
 }
 
-func (cell *BasicCell) RemoveVertically() {
-	cell.up.setDown(cell.down)
-	cell.down.setUp(cell.up)
+func (c *cell) RemoveVertically() {
+	c.up.setDown(c.down)
+	c.down.setUp(c.up)
 }
 
-func (cell *BasicCell) RestoreVertically() {
-	cell.up.setDown(cell)
-	cell.down.setUp(cell)
+func (c *cell) RestoreVertically() {
+	c.up.setDown(c)
+	c.down.setUp(c)
 }
 
-func (cell *BasicCell) RemoveHorizontally() {
-	cell.right.setLeft(cell.left)
-	cell.left.setRight(cell.right)
+func (c *cell) RemoveHorizontally() {
+	c.right.setLeft(c.left)
+	c.left.setRight(c.right)
 }
 
-func (cell *BasicCell) RestoreHorizontally() {
-	cell.right.setLeft(cell)
-	cell.left.setRight(cell)
+func (c *cell) RestoreHorizontally() {
+	c.right.setLeft(c)
+	c.left.setRight(c)
+}
+
+func (c *cell) cover() {
+	c.RemoveHorizontally()
+	for i := c.down; i != c; i = i.down {
+		for j := i.right; j != i; j = j.right {
+			logger.Println(c, i, j)
+			logger.Println(matrix)
+			j.RemoveVertically()
+		}
+	}
+}
+
+func (c *cell) uncover() {
+	for i := c.up; i != c; i = i.up {
+		for j := i.left; j != i; j = j.left {
+			logger.Println(c, i, j)
+			j.RestoreVertically()
+		}
+	}
+	c.RestoreHorizontally()
 }

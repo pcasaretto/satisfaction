@@ -3,125 +3,83 @@ package satisfaction
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"os"
 )
 
 type container struct {
-	header *HeaderCell
+	header *cell
 	value  Possibility
 }
 
-type HeaderCell struct {
-	*BasicCell
-	size int
-}
-
-func NewHeaderCell(v interface{}) *HeaderCell {
-	header := &HeaderCell{}
-	cell := NewCell(v)
-	cell.up = header
-	cell.down = header
-	cell.left = header
-	cell.right = header
-	header.BasicCell = cell
-	return header
-}
-
-func (cell *HeaderCell) cover() {
-	cell.RemoveHorizontally()
-	for c1 := cell.Down(); c1 != cell; c1 = c1.Down() {
-		for c2 := c1.Right(); c2 != c1; c2 = c2.Right() {
-			c2.RemoveVertically()
-		}
-	}
-}
-
-func (cell *HeaderCell) uncover() {
-	for c1 := cell.Up(); c1 != cell; c1 = c1.Up() {
-		for c2 := c1.Left(); c2 != c1; c2 = c2.Left() {
-			c2.RestoreVertically()
-		}
-	}
-	cell.RestoreHorizontally()
-}
-
-func (cell *HeaderCell) PushCellRight(c Cell) {
-	cell.BasicCell.PushCellRight(c)
-	cell.size++
-}
+var logger = log.New(os.Stdout, "logger: ", log.Lshortfile)
+var matrix *constraintMatrix
 
 type constraintMatrix struct {
-	root *HeaderCell
+	root *cell
 }
 
 func (c *constraintMatrix) Len() int {
 	var i int
-	for cell := c.root.Left(); cell != c.root; cell = cell.Right() {
+	for cell := c.root.left; cell != c.root; cell = cell.right {
 		i++
 	}
 	return i
 }
 
-func (c *constraintMatrix) chooseUnsatisfiedConstraint() *HeaderCell {
-	cell := c.root.Right().(*HeaderCell)
+func (c *constraintMatrix) chooseUnsatisfiedConstraint() *cell {
+	cell := c.root.right
 	if cell != c.root {
 		return cell
 	}
 	return nil
 }
 
-func (c *constraintMatrix) solve(out chan Possibility, btrack chan bool, found chan bool) {
-	headerCell := c.chooseUnsatisfiedConstraint()
-	if headerCell == nil {
-		// Reached end of tree, backtrack and find next solution
-		found <- true
-		return
-	}
-	headerCell.cover()
-	for cell := headerCell.Down(); cell != headerCell; cell = cell.Down() {
-		t := cell.Value().(container)
-		out <- t.value
-		for neighbor := cell.Right(); neighbor != cell; neighbor = neighbor.Right() {
-			t = neighbor.Value().(container)
-			t.header.cover()
-		}
-		c.solve(out, btrack, found)
-		btrack <- true
-		for neighbor := cell.Right(); neighbor != cell; neighbor = neighbor.Right() {
-			t = neighbor.Value().(container)
-			t.header.uncover()
-		}
-		headerCell.uncover()
-	}
-}
-
 func (c *constraintMatrix) String() string {
 	var b bytes.Buffer
-	var i int
-	for header := c.root.Right(); header != c.root; header = header.Right() {
-		for cell := header.Down(); cell != header; cell = cell.Down() {
-			b.WriteString(cell.(*BasicCell).String())
-			b.WriteString(" | ")
-			i++
+	var k int
+	outerRound := false
+	for i := c.root.right; ; i = i.down {
+		if i == c.root.right {
+			if outerRound {
+				break
+			} else {
+				outerRound = true
+			}
 		}
+		round := false
+		for j := i; ; j = j.right {
+			if j == i {
+				if round {
+					break
+				} else {
+					round = true
+				}
+			}
+			b.WriteString(fmt.Sprint(j))
+			b.WriteString(" | ")
+			k++
+		}
+		b.WriteString("\n")
 	}
-	b.WriteString(fmt.Sprintf("\n Size: %d", i))
+	b.WriteString(fmt.Sprintf("\n Size: %d", k))
 	return b.String()
 }
 
 func newConstraintMatrix(problem Problem) *constraintMatrix {
-	root := NewHeaderCell(nil)
+	root := NewCell(nil)
 
 	for _, constraint := range problem.Constraints() {
-		root.PushCellRight(NewHeaderCell(constraint))
+		root.PushCellRight(NewCell(constraint))
 	}
 
 	for _, possibility := range problem.Possibilities() {
-		var lastCell Cell
-		for header := root.Right(); header != root; header = header.Right() {
-			constraint := header.Value().(Constraint)
+		var lastCell *cell
+		for header := root.right; header != root; header = header.right {
+			constraint := header.value.(Constraint)
 			if constraint(possibility) {
 				container := container{
-					header: header.(*HeaderCell),
+					header: header,
 					value:  possibility,
 				}
 				newCell := NewCell(container)
@@ -137,28 +95,69 @@ func newConstraintMatrix(problem Problem) *constraintMatrix {
 	return &constraintMatrix{root}
 }
 
+func (c *constraintMatrix) solve(out chan Possibility, btrack chan struct{}, found chan struct{}) {
+	fmt.Println("recursing")
+	headerCell := c.chooseUnsatisfiedConstraint()
+	if headerCell == nil {
+		// Reached end of tree
+		found <- struct{}{}
+		return
+	}
+	headerCell.cover()
+	for cell := headerCell.down; cell != headerCell; cell = cell.down {
+		fmt.Println("125")
+		t := cell.value.(container)
+		out <- t.value
+		for neighbor := cell.right; neighbor != cell; neighbor = neighbor.right {
+			fmt.Println("129")
+			t = neighbor.value.(container)
+			t.header.cover()
+		}
+		c.solve(out, btrack, found)
+		btrack <- struct{}{}
+		for neighbor := cell.left; neighbor != cell; neighbor = neighbor.left {
+			fmt.Println("135")
+			t = neighbor.value.(container)
+			t.header.uncover()
+		}
+		headerCell.uncover()
+	}
+	fmt.Println("141")
+}
+
 type AlgorithmX struct {
 }
 
 func (a AlgorithmX) Solve(p Problem, out chan<- Solution, done <-chan struct{}) error {
 	cMatrix := newConstraintMatrix(p)
+	matrix = cMatrix
 
 	possibleSolutions := make(chan Possibility)
-	backtrack := make(chan bool)
-	foundSolution := make(chan bool)
+	backtrack := make(chan struct{})
+	foundSolution := make(chan struct{})
+	allFound := make(chan struct{})
 
 	solution := make(Solution, 0, cMatrix.Len())
-	go cMatrix.solve(possibleSolutions, backtrack, foundSolution)
+	go func() {
+		cMatrix.solve(possibleSolutions, backtrack, foundSolution)
+		close(allFound)
+	}()
 	go func() {
 	loop:
 		for {
 			select {
 			case s := <-possibleSolutions:
+				fmt.Println(s)
 				solution = append(solution, s)
 			case <-backtrack:
+				fmt.Println("backtracking")
 				solution = solution[:len(solution)-1]
 			case <-foundSolution:
+				fmt.Println("found a solution")
 				out <- solution
+			case <-allFound:
+				fmt.Println("found all solutions")
+				break loop
 			case <-done:
 				break loop
 			}

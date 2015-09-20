@@ -76,11 +76,14 @@ var _ = Describe("AlgorithmX", func() {
 			solver  Solver
 		)
 
+		BeforeEach(func() {
+			solver = AlgorithmX{}
+		})
+
 		Context("for a size 1 Latin Square", func() {
 
 			BeforeEach(func() {
 				problem = NewLatinSquare(1)
-				solver = AlgorithmX{}
 			})
 
 			It("finds the right solutions", func() {
@@ -90,6 +93,7 @@ var _ = Describe("AlgorithmX", func() {
 				Expect(<-ch).To(ConsistOf(expected))
 			})
 		})
+
 	})
 
 })
