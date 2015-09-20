@@ -94,6 +94,23 @@ var _ = Describe("AlgorithmX", func() {
 			})
 		})
 
+		Context("for a size 2 Latin Square", func() {
+
+			BeforeEach(func() {
+				problem = NewLatinSquare(2)
+			})
+
+			It("finds all solutions", func() {
+				solutions := make([]Solution, 0, 2)
+				ch := make(chan Solution)
+				solver.Solve(problem, ch, make(chan struct{}))
+				for s := range ch {
+					solutions = append(solutions, s)
+				}
+				Expect(len(solutions)).To(Equal(2))
+			})
+		})
+
 	})
 
 })

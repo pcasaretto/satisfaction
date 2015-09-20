@@ -3,8 +3,6 @@ package satisfaction
 import (
 	"bytes"
 	"fmt"
-	"log"
-	"os"
 )
 
 type container struct {
@@ -12,7 +10,6 @@ type container struct {
 	value  Possibility
 }
 
-var logger = log.New(os.Stdout, "logger: ", log.Lshortfile)
 var matrix *constraintMatrix
 
 type constraintMatrix struct {
@@ -96,7 +93,6 @@ func newConstraintMatrix(problem Problem) *constraintMatrix {
 }
 
 func (c *constraintMatrix) solve(out chan Possibility, btrack chan struct{}, found chan struct{}) {
-	fmt.Println("recursing")
 	headerCell := c.chooseUnsatisfiedConstraint()
 	if headerCell == nil {
 		// Reached end of tree
@@ -105,24 +101,20 @@ func (c *constraintMatrix) solve(out chan Possibility, btrack chan struct{}, fou
 	}
 	headerCell.cover()
 	for cell := headerCell.down; cell != headerCell; cell = cell.down {
-		fmt.Println("125")
 		t := cell.value.(container)
 		out <- t.value
 		for neighbor := cell.right; neighbor != cell; neighbor = neighbor.right {
-			fmt.Println("129")
 			t = neighbor.value.(container)
 			t.header.cover()
 		}
 		c.solve(out, btrack, found)
 		btrack <- struct{}{}
 		for neighbor := cell.left; neighbor != cell; neighbor = neighbor.left {
-			fmt.Println("135")
 			t = neighbor.value.(container)
 			t.header.uncover()
 		}
-		headerCell.uncover()
 	}
-	fmt.Println("141")
+	headerCell.uncover()
 }
 
 type AlgorithmX struct {
@@ -147,16 +139,13 @@ func (a AlgorithmX) Solve(p Problem, out chan<- Solution, done <-chan struct{}) 
 		for {
 			select {
 			case s := <-possibleSolutions:
-				fmt.Println(s)
 				solution = append(solution, s)
 			case <-backtrack:
-				fmt.Println("backtracking")
 				solution = solution[:len(solution)-1]
 			case <-foundSolution:
-				fmt.Println("found a solution")
 				out <- solution
 			case <-allFound:
-				fmt.Println("found all solutions")
+				close(out)
 				break loop
 			case <-done:
 				break loop

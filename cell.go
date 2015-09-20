@@ -4,26 +4,6 @@ import "fmt"
 
 var _id uint64 = 0
 
-type CellInterface interface {
-	Up() cell
-	Down() cell
-	Left() cell
-	Right() cell
-	PushCellDown(toAdd cell)
-	PushCellUp(toAdd cell)
-	PushCellLeft(toAdd cell)
-	PushCellRight(toAdd cell)
-	RemoveVertically()
-	RestoreVertically()
-	RemoveHorizontally()
-	RestoreHorizontally()
-	Value() interface{}
-	setDown(toAdd cell)
-	setUp(toAdd cell)
-	setLeft(toAdd cell)
-	setRight(toAdd cell)
-}
-
 type cell struct {
 	left  *cell
 	right *cell
@@ -127,8 +107,6 @@ func (c *cell) cover() {
 	c.RemoveHorizontally()
 	for i := c.down; i != c; i = i.down {
 		for j := i.right; j != i; j = j.right {
-			logger.Println(c, i, j)
-			logger.Println(matrix)
 			j.RemoveVertically()
 		}
 	}
@@ -137,7 +115,6 @@ func (c *cell) cover() {
 func (c *cell) uncover() {
 	for i := c.up; i != c; i = i.up {
 		for j := i.left; j != i; j = j.left {
-			logger.Println(c, i, j)
 			j.RestoreVertically()
 		}
 	}
