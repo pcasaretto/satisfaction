@@ -5,8 +5,6 @@ import (
 	"fmt"
 )
 
-var matrix *constraintMatrix
-
 type constraintMatrix struct {
 	root *cell
 }
@@ -59,7 +57,7 @@ func (c *constraintMatrix) String() string {
 			b.WriteString(" | ")
 			k++
 		}
-		b.WriteString("\n")
+		b.WriteString(" ∑ ")
 	}
 	b.WriteString(fmt.Sprintf("\n Size: %d", k))
 	return b.String()
@@ -119,7 +117,6 @@ type AlgorithmX struct {
 
 func (a AlgorithmX) Solve(p Problem, out chan<- Solution, done <-chan struct{}) error {
 	cMatrix := newConstraintMatrix(p)
-	matrix = cMatrix
 
 	possibleSolutions := make(chan Possibility)
 	backtrack := make(chan struct{})

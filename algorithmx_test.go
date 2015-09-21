@@ -105,6 +105,7 @@ var _ = Describe("AlgorithmX", func() {
 				ch := make(chan Solution)
 				solver.Solve(problem, ch, make(chan struct{}))
 				for s := range ch {
+					Expect(len(s)).To(Equal(4))
 					solutions = append(solutions, s)
 				}
 				Expect(len(solutions)).To(Equal(2))
@@ -122,6 +123,7 @@ var _ = Describe("AlgorithmX", func() {
 				ch := make(chan Solution)
 				solver.Solve(problem, ch, make(chan struct{}))
 				for s := range ch {
+					Expect(len(s)).To(Equal(9))
 					solutions = append(solutions, s)
 				}
 				Expect(len(solutions)).To(Equal(12))
