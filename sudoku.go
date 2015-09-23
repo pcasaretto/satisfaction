@@ -1,13 +1,24 @@
 package satisfaction
 
 type SudokuCell struct {
-	row    int
-	column int
-	value  int
+	Row    int
+	Column int
+	Value  int
 }
 
 type Sudoku struct {
-	Rank int
+	Rank   int
+	Givens []SudokuCell
+}
+
+func (s *Sudoku) gridConstraint(n, i, j int) func(Possibility) bool {
+	return func(c Possibility) bool {
+		cell := c.(SudokuCell)
+		rightY := (cell.Row-1)/s.Rank+1 == i
+		rightX := (cell.Column-1)/s.Rank+1 == j
+		rightValue := cell.Value == n
+		return rightX && rightY && rightValue
+	}
 }
 
 func (s *Sudoku) Constraints() []Constraint {
@@ -22,14 +33,7 @@ func (s *Sudoku) Constraints() []Constraint {
 				i := i
 				j := j
 				// The number 'n' must appear in grid '(i,j)'
-				f = func(c Possibility) bool {
-					cell := c.(SudokuCell)
-					rightY := (cell.row-1)/s.Rank+1 == i
-					rightX := (cell.column-1)/s.Rank+1 == j
-					rightValue := cell.value == n
-					return rightX && rightY && rightValue
-				}
-				constraints = append(constraints, f)
+				constraints = append(constraints, s.gridConstraint(n, i, j))
 			}
 		}
 	}
@@ -42,27 +46,41 @@ func (s *Sudoku) Constraints() []Constraint {
 			// There must be a number in each cell
 			f = func(c Possibility) bool {
 				cell := c.(SudokuCell)
-				return cell.column == column && cell.row == row
+				return cell.Column == column && cell.Row == row
 			}
 			constraints = append(constraints, f)
 
 			// The number 'row' must appear in row 'column'
 			f = func(c Possibility) bool {
 				cell := c.(SudokuCell)
-				return cell.row == column && cell.value == row
+				return cell.Row == column && cell.Value == row
 			}
 			constraints = append(constraints, f)
 
 			// The number 'row' must appear in column 'column'
 			f = func(c Possibility) bool {
 				cell := c.(SudokuCell)
-				return cell.column == column && cell.value == row
+				return cell.Column == column && cell.Value == row
 			}
 			constraints = append(constraints, f)
 
 		}
 	}
-	return constraints
+	//eliminate satisfied constraints
+	var finalConstraints []Constraint
+	for _, constraint := range constraints {
+		noneSatisfy := true
+		for _, given := range s.Givens {
+			if constraint(given) {
+				noneSatisfy = false
+				break
+			}
+		}
+		if noneSatisfy {
+			finalConstraints = append(finalConstraints, constraint)
+		}
+	}
+	return finalConstraints
 }
 
 func (s *Sudoku) Possibilities() []Possibility {
@@ -71,9 +89,24 @@ func (s *Sudoku) Possibilities() []Possibility {
 	for number := 1; number <= size; number++ {
 		for row := 1; row <= size; row++ {
 			for column := 1; column <= size; column++ {
-				array = append(array, SudokuCell{value: number, row: row, column: column})
+				array = append(array, SudokuCell{Value: number, Row: row, Column: column})
 			}
 		}
 	}
-	return array
+	//eliminate givens
+	var possiblities []Possibility
+	for _, cell := range array {
+		cell := cell.(SudokuCell)
+		isGiven := false
+		for _, given := range s.Givens {
+			if cell.Row == given.Row && cell.Column == given.Column {
+				isGiven = true
+				break
+			}
+		}
+		if !isGiven {
+			possiblities = append(possiblities, cell)
+		}
+	}
+	return possiblities
 }
