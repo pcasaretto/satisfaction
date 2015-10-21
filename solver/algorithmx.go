@@ -1,8 +1,10 @@
-package satisfaction
+package solver
 
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/pcasaretto/satisfaction"
 )
 
 type constraintMatrix struct {
@@ -63,7 +65,7 @@ func (c *constraintMatrix) String() string {
 	return b.String()
 }
 
-func newConstraintMatrix(problem Problem) *constraintMatrix {
+func newConstraintMatrix(problem satisfaction.Problem) *constraintMatrix {
 	root := NewCell(nil)
 
 	for _, constraint := range problem.Constraints() {
@@ -73,7 +75,7 @@ func newConstraintMatrix(problem Problem) *constraintMatrix {
 	for _, possibility := range problem.Possibilities() {
 		var lastCell *cell
 		for header := root.right; header != root; header = header.right {
-			constraint := header.value.(Constraint)
+			constraint := header.value.(satisfaction.Constraint)
 			if constraint(possibility) {
 				newCell := NewCell(possibility)
 				newCell.header = header
@@ -90,7 +92,7 @@ func newConstraintMatrix(problem Problem) *constraintMatrix {
 	return &constraintMatrix{root}
 }
 
-func (c *constraintMatrix) solve(out chan Possibility, btrack chan struct{}, found chan struct{}) {
+func (c *constraintMatrix) solve(out chan satisfaction.Possibility, btrack chan struct{}, found chan struct{}) {
 	headerCell := c.chooseUnsatisfiedConstraint()
 	if headerCell == nil {
 		// Reached end of tree
@@ -115,15 +117,15 @@ func (c *constraintMatrix) solve(out chan Possibility, btrack chan struct{}, fou
 type AlgorithmX struct {
 }
 
-func (a AlgorithmX) Solve(p Problem, out chan<- Solution, done <-chan struct{}) error {
+func (a AlgorithmX) Solve(p satisfaction.Problem, out chan<- satisfaction.Solution, done <-chan struct{}) error {
 	cMatrix := newConstraintMatrix(p)
 
-	possibleSolutions := make(chan Possibility)
+	possibleSolutions := make(chan satisfaction.Possibility)
 	backtrack := make(chan struct{})
 	foundSolution := make(chan struct{})
 	allFound := make(chan struct{})
 
-	solution := make(Solution, 0, cMatrix.Len())
+	solution := make(satisfaction.Solution, 0, cMatrix.Len())
 	go func() {
 		cMatrix.solve(possibleSolutions, backtrack, foundSolution)
 		close(allFound)

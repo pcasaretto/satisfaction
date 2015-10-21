@@ -1,4 +1,4 @@
-package satisfaction
+package solver
 
 import "fmt"
 
