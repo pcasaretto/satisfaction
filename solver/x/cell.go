@@ -1,4 +1,4 @@
-package solver
+package x
 
 import "fmt"
 
@@ -15,7 +15,7 @@ type cell struct {
 	id     uint64
 }
 
-func NewCell(v interface{}) *cell {
+func newCell(v interface{}) *cell {
 	cell := &cell{value: v}
 	cell.down = cell
 	cell.up = cell
@@ -39,32 +39,28 @@ func (c *cell) String() string {
 	return fmt.Sprintf("Cell id %d", c.id)
 }
 
-func (c *cell) Value() interface{} {
-	return c.value
-}
-
-func (c *cell) PushCellDown(other *cell) {
+func (c *cell) pushCellDown(other *cell) {
 	c.down.setUp(other)
 	other.setDown(c.down)
 	c.down = other
 	other.setUp(c)
 }
 
-func (c *cell) PushCellUp(other *cell) {
+func (c *cell) pushCellUp(other *cell) {
 	c.up.setDown(other)
 	other.setUp(c.up)
 	c.up = other
 	other.setDown(c)
 }
 
-func (c *cell) PushCellLeft(other *cell) {
+func (c *cell) pushCellLeft(other *cell) {
 	c.left.setRight(other)
 	other.setLeft(c.left)
 	c.left = other
 	other.setRight(c)
 }
 
-func (c *cell) PushCellRight(other *cell) {
+func (c *cell) pushCellRight(other *cell) {
 	c.right.setLeft(other)
 	other.setRight(c.right)
 	c.right = other
@@ -84,31 +80,31 @@ func (c *cell) setRight(toAdd *cell) {
 	c.right = toAdd
 }
 
-func (c *cell) RemoveVertically() {
+func (c *cell) removeVertically() {
 	c.up.setDown(c.down)
 	c.down.setUp(c.up)
 }
 
-func (c *cell) RestoreVertically() {
+func (c *cell) restoreVertically() {
 	c.up.setDown(c)
 	c.down.setUp(c)
 }
 
-func (c *cell) RemoveHorizontally() {
+func (c *cell) removeHorizontally() {
 	c.right.setLeft(c.left)
 	c.left.setRight(c.right)
 }
 
-func (c *cell) RestoreHorizontally() {
+func (c *cell) restoreHorizontally() {
 	c.right.setLeft(c)
 	c.left.setRight(c)
 }
 
 func (c *cell) cover() {
-	c.RemoveHorizontally()
+	c.removeHorizontally()
 	for i := c.down; i != c; i = i.down {
 		for j := i.right; j != i; j = j.right {
-			j.RemoveVertically()
+			j.removeVertically()
 			j.header.size--
 		}
 	}
@@ -117,9 +113,9 @@ func (c *cell) cover() {
 func (c *cell) uncover() {
 	for i := c.up; i != c; i = i.up {
 		for j := i.left; j != i; j = j.left {
-			j.RestoreVertically()
+			j.restoreVertically()
 			j.header.size++
 		}
 	}
-	c.RestoreHorizontally()
+	c.restoreHorizontally()
 }
