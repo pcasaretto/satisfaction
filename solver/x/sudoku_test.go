@@ -1,7 +1,6 @@
 package x_test
 
 import (
-	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -142,9 +141,45 @@ func TestSudokuSpecificSolutionRank3(t *testing.T) {
 		{9, 9, 4},
 	}
 	if !reflect.DeepEqual(cells, expected) {
-		f, _ := os.Create("failed.csv")
-		p.CSVDump(cells, f)
-		f.Close()
-		t.Error("")
+		t.Error("Found a different solution?")
+	}
+}
+
+func BenchmarkSudokuRank3Solution(b *testing.B) {
+	givens := []problem.SudokuCell{
+		{1, 1, 1},
+		{1, 7, 5},
+		{1, 9, 3},
+		{2, 5, 2},
+		{2, 7, 1},
+		{3, 3, 3},
+		{3, 6, 6},
+		{3, 9, 8},
+		{4, 1, 4},
+		{4, 3, 2},
+		{4, 4, 8},
+		{4, 6, 3},
+		{5, 2, 6},
+		{5, 9, 2},
+		{6, 1, 7},
+		{6, 8, 9},
+		{6, 9, 5},
+		{7, 2, 5},
+		{7, 3, 6},
+		{8, 3, 4},
+		{8, 8, 3},
+		{8, 9, 7},
+		{9, 1, 2},
+		{9, 6, 8},
+		{9, 7, 6},
+	}
+	p := problem.NewSudoku(3, givens)
+	done := make(chan struct{})
+	solver := x.Solver{}
+	ch := make(chan satisfaction.Solution)
+	for n := 0; n < b.N; n++ {
+		solver.Solve(p, ch, done)
+		<-ch
+		close(done)
 	}
 }
