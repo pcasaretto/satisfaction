@@ -46,8 +46,10 @@ func (c *constraintMatrix) chooseUnsatisfiedConstraint() *cell {
 		return nil
 	}
 
+	min := minCell.size
 	for i := c.root.right; i != c.root; i = i.right {
-		if i.size < minCell.size {
+		if i.size < min {
+			min = i.size
 			minCell = i
 		}
 	}
